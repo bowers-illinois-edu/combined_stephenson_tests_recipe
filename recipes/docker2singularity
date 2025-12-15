@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Capture $DOCKER_IMAGE from the ARGV, i.e.: jake_dev:0.1
+# singularity build jake_dev-0.1.sif docker://jwbowers/jake_dev:0.1
+DOCKER_IMAGE=$1
+
+# Get the IMAGE via docker pull
+echo "# Pulling ${DOCKER_IMAGE}"
+echo "#"
+docker pull $DOCKER_IMAGE
+
+# Replace ':' by '-'
+SING_IMAGE=${DOCKER_IMAGE//:/-}
+
+# Split by `/` to get the actual name
+arr=(${SING_IMAGE//\// })
+SING_IMAGE=${arr[1]}
+
+echo "# new name: ${SING_IMAGE}"
+echo "# will run: "
+echo "#   docker save ${DOCKER_IMAGE}  -o  ./${SING_IMAGE}.tar"
+echo "#   singularity build ${SING_IMAGE}.sif docker://jwbowers/${DOCKER_IMAGE}"
+
+## docker save ${DOCKER_IMAGE}  -o ./${SING_IMAGE}.tar
+singularity build ${SING_IMAGE}.sif docker://jwbowers/${DOCKER_IMAGE}
