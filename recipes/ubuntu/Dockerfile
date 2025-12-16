@@ -16,7 +16,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG DEV=1
 
 RUN apt-get update --fix-missing
-RUN apt-get install -y wget emacs git vim neovim curl eza tmux htop pandoc curl gdebi-core
+RUN apt-get install -y wget emacs git vim neovim curl eza tmux htop pandoc curl gdebi-core ripgrep
 
 # 1) Basics + CRAN repo key and source (noble)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -38,18 +38,13 @@ RUN apt-get update \
 RUN if [ "$DEV" = "1" ]; then \
       apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
+        pkg-config \
         libcurl4-openssl-dev libssl-dev libxml2-dev \
+        libgit2-dev \
         libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
         libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
       && rm -rf /var/lib/apt/lists/* ; \
     fi
-
-# 3) Install quarto
-ARG QUARTO_VERSION="1.8.25" # Or your desired version
-
-RUN wget -O quarto-linux-amd64.deb https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb && \
-    gdebi --non-interactive quarto-linux-amd64.deb && \
-    rm quarto-linux-amd64.deb
 
 # 4) Set default CRAN mirror (so install.packages() works non-interactively)
 RUN printf '%s\n' \
@@ -59,6 +54,38 @@ RUN printf '%s\n' \
     '  options(repos = r)' \
     '})' \
     > /etc/R/Rprofile.site
+
+# 5) Restore R packages from renv.lock (CRAN + GitHub), installing into the global site library
+# IMPORTANT: Build with the repo root as context so renv.lock is available, e.g.:
+#   docker build -f recipes/ubuntu/Dockerfile -t spt3g_ubuntu --build-arg D_USERNAME=jake .
+WORKDIR /opt/recipe
+COPY renv.lock /opt/recipe/renv.lock
+
+# Optional: include local renv cellar tarballs in the build context (e.g., Gurobi).
+COPY renv/cellar/ /opt/recipe/renv/cellar/
+COPY scripts/renv_filter_lock.py /opt/recipe/renv_filter_lock.py
+
+# Put renv cache somewhere stable to improve layer reuse
+ENV RENV_PATHS_CACHE=/opt/renv/cache
+ENV RENV_PATHS_CELLAR=/opt/recipe/renv/cellar
+
+# Optional: enable private GitHub installs at build time
+ARG GITHUB_PAT
+ARG KEEP_GUROBI=1
+
+RUN R -e 'install.packages("renv", repos = "https://cloud.r-project.org")' \
+ && mkdir -p /usr/local/lib/R/site-library \
+ && RENV_KEEP_GUROBI="$KEEP_GUROBI" python3 /opt/recipe/renv_filter_lock.py /opt/recipe/renv.lock /opt/recipe/renv.docker.lock \
+ && if [ -n "$GITHUB_PAT" ]; then export GITHUB_PAT="$GITHUB_PAT"; fi \
+ && R -e 'renv::restore(lockfile = "/opt/recipe/renv.docker.lock", library = "/usr/local/lib/R/site-library", prompt = FALSE)' \
+ && if [ "$KEEP_GUROBI" = "1" ] && [ -f /opt/recipe/renv/cellar/gurobi/gurobi_12.0-3.tar.gz ]; then \
+      ARCH=$(uname -m); \
+      if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then \
+        R -e 'install.packages("/opt/recipe/renv/cellar/gurobi/gurobi_12.0-3.tar.gz", repos = NULL, lib = "/usr/local/lib/R/site-library")'; \
+      else \
+        echo "Skipping gurobi install on architecture $ARCH (requires x86_64/amd64)"; \
+      fi; \
+    fi
 
 ARG D_USERNAME
 RUN useradd -ms /bin/bash $D_USERNAME && \
