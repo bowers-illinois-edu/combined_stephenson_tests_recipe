@@ -1,6 +1,6 @@
 D_USERNAME=$USER
 IMAGE=jake_dev
-TAG=0.1
+TAG=0.3
 
 # This is the only one that matters
 DOCKER_IMA=jwbowers/$IMAGE:$TAG
