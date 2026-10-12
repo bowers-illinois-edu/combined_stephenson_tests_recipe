@@ -154,8 +154,9 @@ koelsch has Docker, but on 2026-10-12 the account `jwbowers` was not in its
 `docker` group. Jake expects to get that access, and decided on 2026-10-12 to
 keep running on koelsch outside Docker in the meantime. So two environments
 coexist: koelsch's conda R with Gurobi, and the image with HiGHS.
-A study runs entirely in one of them, never split across the two, and its
-result files record which one (the image tag, or koelsch's conda environment
+This plan adds a rule, which awaits Jake's confirmation: a study runs
+entirely in one of them, never split across the two, and its result files
+record which one (the image tag, or koelsch's conda environment
 `mambaR461`).
 
 ### 3.5 The image's lockfile, and Gurobi
@@ -215,6 +216,11 @@ and it would have no HiGHS. The proposed changes:
 - `docker run ... Rscript -e 'sessionInfo()'` inside the built image names its
   BLAS, the linear-algebra library R calls. Section 6, step 4, says why that
   matters.
+
+These changes were made on 2026-10-12 in `recipes/ubuntu/Dockerfile`,
+`recipes/build_ubuntu.sh` and `recipes/scripts/check_image.R`, and the
+documentation was brought up to tag 0.3. Neither image had been built when
+this was written.
 
 Building an amd64 image on the arm64 laptop runs under emulation, and
 `renv::restore()` compiles each of the 150 packages from source. Precompiled
@@ -346,7 +352,67 @@ results are copied back with `rsync`, as from koelsch.
 - Gurobi staff have written that machine-tied academic licences do not work
   inside Docker, so Gurobi in a laptop container would also need WLS.
 
-## 10. Sources
+## 10. Where the work stands at the end of 2026-10-12, and what comes next
+
+### 10.1 State
+
+Committed in this repository: this memo. Changed but not committed, waiting
+for a build that passes:
+
+- `recipes/ubuntu/Dockerfile` (the `cluster` and `dev` stages of Section 5)
+- `recipes/build_ubuntu.sh` (copies the paper's `renv.lock`, checks the R
+  build, tags `0.3` and `0.3-<paper commit>`)
+- `recipes/scripts/check_image.R` (new; run at the end of each stage)
+- `recipes/.dockerignore` (new)
+- `recipes/renv.lock` and `recipes/renv.lock.SOURCE` (the paper's lockfile at
+  commit e45e34a, copied with `PREPARE_ONLY=1`)
+- `README.md`, `AGENTS.md`, `CLAUDE.md`, `start_docker.sh`, `start_docker_2.sh`
+  (tag 0.3 and the two images)
+
+Tested without Docker: `check_image.R` on the laptop against the paper
+repository's renv library (all 150 packages match; an altered lock, and
+gurobi present in cluster mode, are each reported), and `build_ubuntu.sh`
+(shell syntax, the R-build guard, the copied lock identical to the paper's,
+149 packages after filtering). Not yet built: the Dockerfile.
+
+### 10.2 Next steps, in order
+
+1. Start Docker Desktop, then run `bash recipes/build_ubuntu.sh` from this
+   repository. It builds `cluster` and then `dev`, and takes hours, because
+   the amd64 image builds under emulation and renv compiles 150 packages from
+   source. `TARGETS=cluster` builds the cluster image alone. If the paper
+   repository's lockfile has changed since e45e34a, the build takes the new
+   one and records its commit.
+2. If both builds finish, commit the files listed in 10.1. Jake decides
+   whether to delete the unused Gurobi 12 tarballs
+   (`recipes/ubuntu/gurobi12.0.3_linux64.tar.gz`, and the tracked
+   `recipes/renv/cellar/gurobi/gurobi_12.0-3.tar.gz`).
+3. Push `jwbowers/jake_cluster` under both tags to Docker Hub.
+4. On a Campus Cluster login node, run the three lookups of Section 6, step
+   1: account names, partitions and their time limits, and node features.
+5. Build the `.sif` from the pushed tag inside an interactive job, with
+   `APPTAINER_CACHEDIR` under `/projects` (Section 6, step 2; the build script
+   prints the command).
+6. In the paper repository: pass `opt.method = "ILP_highs"` for cluster runs,
+   stop `stage.R` from requiring Gurobi for stage 2, write the one-cell entry
+   point and the Slurm array script (Section 6, step 3), and record the load
+   average in the first cluster pilot to see whether HiGHS needs a thread cap
+   (Section 3.1).
+7. Run the processor check of Section 6, step 4.
+8. Add the cluster section to the paper repository's
+   `code/RUNNING_REMOTELY.md` and the line in its `CLAUDE.md` (Section 6,
+   step 5).
+
+### 10.3 Questions still open for Jake
+
+- Confirm the rule of Section 3.4: a study runs entirely on koelsch's own R
+  or entirely in the image, and its results record which.
+- The three decisions of Section 4: where development happens, where the
+  Slurm scripts go, and whether the paper's empirical bounds stay on Gurobi.
+- Access to koelsch's `docker` group, which would let koelsch run the image
+  and join the processor check.
+
+## 11. Sources
 
 - Felipe's repositories: https://github.com/CMB-NCSA/spt3g_jobs,
   https://github.com/CMB-NCSA/spt3g_ingest-recipes,
