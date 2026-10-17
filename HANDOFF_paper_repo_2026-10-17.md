@@ -33,6 +33,15 @@ facts instead of rediscovering them.
   configured, so after Jake opens the connection once and approves Duo,
   agents run `ssh cc '...'` with no further prompts until the master
   connection closes.
+- Code sync: the cluster already has a checkout of the paper repository at
+  `/projects/illinois/las/pol/jwbowers/repos/combined_stephenson_tests`,
+  with `origin` at `git@github.com:bowers-illinois-edu/combined_stephenson_tests.git`,
+  and `git fetch` from GitHub works from the cluster (verified 2026-10-17).
+  So code travels: commit and push from the laptop, then `git pull` on the
+  cluster.  That checkout was at `7ba9e22` on 2026-10-17 and must be
+  pulled to the run's commit before any job starts.  (An untracked
+  `jake_dev-0.1.sif` from an earlier attempt sits inside that checkout;
+  Jake decides whether to delete it.)
 
 ## What the paper repository still needs, in order
 
