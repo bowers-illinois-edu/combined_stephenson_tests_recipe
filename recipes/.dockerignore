@@ -1,0 +1,8 @@
+# The Dockerfile copies only renv.lock, renv.lock.SOURCE and two scripts.
+# Gurobi is downloaded inside the build, so the old tarballs here need not
+# be sent to Docker with every build.
+ubuntu/*.tar.gz
+renv/cellar/
+*.sif
+*.tar
+singularity_tmp/

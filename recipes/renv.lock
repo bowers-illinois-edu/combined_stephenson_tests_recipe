@@ -11,14 +11,14 @@
   "Packages": {
     "CMRSS": {
       "Package": "CMRSS",
-      "Version": "0.2.11",
+      "Version": "0.2.19",
       "Source": "GitHub",
       "Type": "Package",
       "Title": "Combining Multiple Rank Sum Statistics",
       "Description": "Randomization inference for quantiles of individual treatment effects using combined rank sum statistics. Supports both completely randomized experiments (CRE) and stratified randomized experiments (SRE). The optimization can be performed using either the open-source HiGHS solver or the commercial Gurobi solver.",
       "License": "MIT + file LICENSE",
-      "URL": "https://bowers-illinois-edu.github.io/CMRSS/, https://github.com/bowers-illinois-edu/CMRSS",
-      "BugReports": "https://github.com/bowers-illinois-edu/CMRSS/issues",
+      "URL": "https://bowers-illinois-edu.github.io/CMRSS/, https://github.com/davidk91919/CMRSS",
+      "BugReports": "https://github.com/davidk91919/CMRSS/issues",
       "Encoding": "UTF-8",
       "LazyData": "true",
       "Depends": [
@@ -37,10 +37,13 @@
         "gurobi",
         "randomizr",
         "RItools",
-        "pkgdown"
+        "pkgdown",
+        "knitr",
+        "rmarkdown"
       ],
       "Roxygen": "list(markdown = TRUE)",
       "Config/testthat/edition": "3",
+      "VignetteBuilder": "knitr",
       "Config/Needs/website": "pkgdown, highs",
       "Authors@R": "c( person(\"David\", \"Kim\", , \"davidk9@illinois.edu\", role = c(\"aut\", \"cre\")), person(\"Xinran\", \"Li\", , \"xinranli@uchicago.edu\", role = \"aut\"), person(\"Jake\", \"Bowers\", , \"jwbowers@uchicago.edu\", role = \"ctb\") )",
       "Config/roxygen2/version": "8.1.0",
@@ -50,8 +53,8 @@
       "RemoteHost": "api.github.com",
       "RemoteUsername": "davidk91919",
       "RemoteRepo": "CMRSS",
-      "RemoteRef": "main",
-      "RemoteSha": "d578e8d5b129db52155b2e8db7cff613f97a13f3",
+      "RemoteRef": "751d829743fb1fd2a70eb3f94655bf0b43f11322",
+      "RemoteSha": "751d829743fb1fd2a70eb3f94655bf0b43f11322",
       "Remotes": "li-xinran/RIQITE"
     },
     "DBI": {

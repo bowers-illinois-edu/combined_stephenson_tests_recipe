@@ -19,6 +19,15 @@ tagged `0.3` and `0.3-<first seven characters of that commit>`. Each build
 stage ends by running `recipes/scripts/check_image.R`, which stops the build
 unless R and every package match the lock.
 
+The packages install from Posit Package Manager's prebuilt Linux binaries
+for the image's Ubuntu, dated the day the paper repository last changed its
+lockfile (`P3M_DATE`; the build script prints the date and records it in
+`recipes/renv.lock.SOURCE`). CRAN serves Linux packages as source only, so
+without this the restore compiles all of them, under emulation on this
+laptop. `P3M_DATE=none` compiles from source. The three GitHub packages
+(CMRSS, QIoT, RIQITE) have no binary repository and always install from
+source.
+
 
 ## Building
 

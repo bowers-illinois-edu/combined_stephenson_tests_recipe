@@ -227,6 +227,18 @@ Building an amd64 image on the arm64 laptop runs under emulation, and
 Linux packages from Posit Package Manager, or a build on a native amd64
 machine, would shorten it. Neither has been tried.
 
+[2026-10-17] The Posit route is wired in and verified against the server,
+though not yet through a Docker build. `renv_filter_lock.py` rewrites the
+copied lock's repository to Posit's prebuilt Linux binaries for noble,
+dated the day the paper repository last changed its lockfile (`P3M_DATE`;
+"none" restores the source-only build), because `renv::restore()` reads its
+repositories from the lockfile. On the 2026-10-15 snapshot, 129 of the 146
+CRAN packages in the paper's lock are prebuilt at the locked version; the
+other 17 are older than current CRAN and come from Posit's archive, which
+serves them prebuilt as well (verified for MASS 7.3-65 and coin 1.4-5). The
+three GitHub packages still install from source. A native amd64 build
+remains untried.
+
 ## 6. The steps, in order
 
 1. On a cluster login node, three commands answer what the web pages do not.
@@ -374,6 +386,16 @@ repository's renv library (all 150 packages match; an altered lock, and
 gurobi present in cluster mode, are each reported), and `build_ubuntu.sh`
 (shell syntax, the R-build guard, the copied lock identical to the paper's,
 149 packages after filtering). Not yet built: the Dockerfile.
+
+[2026-10-17] The Dockerfile is built. Both images are tagged 0.3 and
+0.3-539edad, the paper repository's lockfile commit. The Posit binaries of
+Section 5 replaced the hours of source compilation: 141 packages installed
+prebuilt, five from source (the GitHub packages, renv and estimatr), the
+package stage 11 minutes. One fix was needed: step 7 created the wheel
+group with addgroup, which ubuntu:24.04's base image does not ship; it now
+uses groupadd. check_image.R passed in both stages, and HiGHS solved the
+test problem inside the running cluster image. The Gurobi 12 tarballs were
+deleted from the repository.
 
 ### 10.2 Next steps, in order
 

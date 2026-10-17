@@ -29,6 +29,10 @@ set -euo pipefail
 #   DOCKER_PLATFORM  default linux/amd64, because the cluster's nodes are
 #                    x86-64 and Gurobi's linux64 build is x86-64 only
 #   KEEP_GUROBI      1 (default) puts Gurobi in the dev image; 0 leaves it out
+#   P3M_DATE         the Posit Package Manager snapshot date whose prebuilt
+#                    Linux binaries the image installs (default: the day the
+#                    paper repository last changed its lockfile; "none"
+#                    leaves the repository on CRAN and compiles from source)
 #   PREPARE_ONLY     1 copies the lockfile and checks the R version, then
 #                    stops before building, to inspect the lockfile's diff
 #   GITHUB_PAT       not needed as of 2026-10-12: the lock's GitHub packages
@@ -57,6 +61,25 @@ git -C "$PAPER_REPO" show "$PAPER_SHA:renv.lock" > renv.lock
 printf 'Copied from %s at commit %s on %s\n' \
   "$PAPER_REPO" "$PAPER_SHA" "$(date +%F)" > renv.lock.SOURCE
 echo "renv.lock: paper repository at ${PAPER_SHA:0:7} ($(git -C "$PAPER_REPO" log -1 --format=%s "$PAPER_SHA"))"
+
+# The Posit binary snapshot date: the day the paper repository last changed
+# its lockfile, which is when the lock's versions were current on CRAN, so
+# the snapshot dated then serves most of them prebuilt.  Versions CRAN has
+# since replaced come from Posit's archive, which also serves them prebuilt.
+# The date is recorded in renv.lock.SOURCE so a later rebuild uses the same
+# snapshot.  P3M_DATE=none leaves the repository on CRAN, and every package
+# compiles from source, as every build did before 2026-10-17.
+if [[ "${P3M_DATE:-}" == "none" ]]; then
+  P3M_DATE=""
+else
+  P3M_DATE="${P3M_DATE:-$(git -C "$PAPER_REPO" log -1 --format=%cs "$PAPER_SHA" -- renv.lock)}"
+fi
+printf 'Posit Package Manager binary snapshot: %s\n' "${P3M_DATE:-none}" >> renv.lock.SOURCE
+if [[ -n "$P3M_DATE" ]]; then
+  echo "Posit binary snapshot: $P3M_DATE (P3M_DATE=none compiles from source)"
+else
+  echo "Posit binary snapshot: none; every package compiles from source"
+fi
 
 # The Debian build of R must be a build of the R the lock records.  The
 # Dockerfile checks the installed R again, but failing here saves the time
@@ -96,6 +119,7 @@ for target in $TARGETS; do
     --build-arg "R_VERSION=$R_VERSION"
     --build-arg "R_DEB_VERSION=$R_DEB_VERSION"
     --build-arg "KEEP_GUROBI=$KEEP_GUROBI"
+    --build-arg "P3M_DATE=$P3M_DATE"
     --build-arg "PAPER_COMMIT=$PAPER_SHA"
     --rm=true
   )

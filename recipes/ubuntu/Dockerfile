@@ -62,19 +62,29 @@ RUN printf '%s\n' \
     > /etc/R/Rprofile.site
 
 # 4) The packages in the paper repository's renv.lock, which build_ubuntu.sh
-# copies here beside renv.lock.SOURCE (the commit it came from).  gurobi is
-# dropped from the lock for this stage, because its R package needs the
-# Gurobi library, which only the dev stage installs.  The library is the
-# site library, which every R process in the container searches first.
+# copies here beside renv.lock.SOURCE (the commit it came from).  The filter
+# drops gurobi from the lock for this stage, because its R package needs the
+# Gurobi library, which only the dev stage installs, and, when P3M_DATE is
+# not empty, rewrites the lock's repository to Posit Package Manager's
+# prebuilt Linux binaries for this Ubuntu: CRAN serves Linux packages as
+# source only, and renv::restore() reads its repositories from the lockfile.
+# Posit builds those binaries against the same CRAN r-base installed above;
+# versions the dated snapshot no longer lists come from Posit's archive
+# (also prebuilt), and the GitHub packages install from source.  The library
+# is the site library, which every R process in the container searches first.
 WORKDIR /opt/recipe
 COPY renv.lock renv.lock.SOURCE /opt/recipe/
 COPY scripts/renv_filter_lock.py scripts/check_image.R /opt/recipe/
 ENV RENV_PATHS_CACHE=/opt/renv/cache
 # Not needed for the lock as of 2026-10-12: its GitHub packages are public.
 ARG GITHUB_PAT
+# Empty when the Dockerfile is built without build_ubuntu.sh; the filter
+# then leaves the lock's repository on CRAN and every package compiles from
+# source, as every build did before 2026-10-17.
+ARG P3M_DATE=
 RUN R -e 'install.packages("renv", repos = "https://cloud.r-project.org")' \
  && RENV_KEEP_GUROBI=0 python3 /opt/recipe/renv_filter_lock.py \
-      /opt/recipe/renv.lock /opt/recipe/renv.docker.lock \
+      /opt/recipe/renv.lock /opt/recipe/renv.docker.lock "$P3M_DATE" \
  && R -e 'renv::restore(lockfile = "/opt/recipe/renv.docker.lock", library = "/usr/local/lib/R/site-library", prompt = FALSE)'
 
 # 5) Inside the container the paper repository's .Rprofile would start renv,
@@ -92,7 +102,7 @@ RUN Rscript /opt/recipe/check_image.R cluster /opt/recipe/renv.lock \
 # and this account is unused; Docker on the laptop uses it.
 ARG D_USERNAME
 RUN useradd -ms /bin/bash "$D_USERNAME" \
- && addgroup wheel \
+ && groupadd wheel \
  && mkdir -p \
       /home/$D_USERNAME/.config \
       /home/$D_USERNAME/.local/share \
