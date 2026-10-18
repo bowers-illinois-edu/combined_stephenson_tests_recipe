@@ -11,7 +11,7 @@
   "Packages": {
     "CMRSS": {
       "Package": "CMRSS",
-      "Version": "0.2.20",
+      "Version": "0.2.21",
       "Source": "GitHub",
       "Type": "Package",
       "Title": "Combining Multiple Rank Sum Statistics",
@@ -53,8 +53,8 @@
       "RemoteHost": "api.github.com",
       "RemoteUsername": "davidk91919",
       "RemoteRepo": "CMRSS",
-      "RemoteRef": "abcf3a4cc196342682e01701700a9e3f7a551780",
-      "RemoteSha": "abcf3a4cc196342682e01701700a9e3f7a551780",
+      "RemoteRef": "16a7a2ab77444fb22ca2775a6528e2470c10a5ab",
+      "RemoteSha": "16a7a2ab77444fb22ca2775a6528e2470c10a5ab",
       "Remotes": "li-xinran/RIQITE"
     },
     "DBI": {
