@@ -25,6 +25,14 @@ set -euo pipefail
 #   IMAGES          where the .sifs live
 #                   (default /projects/illinois/las/pol/jwbowers/images)
 #   BUILD_FLAGS     flags for apptainer build (default --fakeroot)
+#
+# Labels.  Apptainer keeps a label the base image already has and does not
+# replace it, so the paper commit of the new lockfile goes under a label the
+# base images do not carry, patched.renv_lock.commit.  The first image this
+# script built, jake_cluster-0.3p-279f5b2.sif (2026-10-18), wrote the commit
+# under paper.renv_lock.commit, which therefore still names the base
+# image's commit, 5acbeaa.  For that image, /opt/recipe/renv.lock.SOURCE
+# inside it records the lockfile's commit correctly (279f5b2).
 
 : "${BASE_TAG:?set BASE_TAG to the tag of the .sif to patch, e.g. 0.3-5acbeaa}"
 IMAGES="${IMAGES:-/projects/illinois/las/pol/jwbowers/images}"
@@ -63,7 +71,7 @@ From: $BASE_SIF
     Rscript /opt/recipe/check_image.R cluster /opt/recipe/renv.lock
 
 %labels
-    paper.renv_lock.commit ${PAPER_SHA}
+    patched.renv_lock.commit ${PAPER_SHA}
     patched.from jake_cluster-${BASE_TAG}
 EOF
 
