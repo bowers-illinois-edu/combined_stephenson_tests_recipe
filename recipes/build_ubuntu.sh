@@ -35,9 +35,6 @@ set -euo pipefail
 #                    leaves the repository on CRAN and compiles from source)
 #   PREPARE_ONLY     1 copies the lockfile and checks the R version, then
 #                    stops before building, to inspect the lockfile's diff
-#   GITHUB_PAT       not needed as of 2026-10-12: the lock's GitHub packages
-#                    (CMRSS, QIoT, RIQITE) are public.  A token passed as a
-#                    build argument can be read back with `docker history`.
 
 # Run from recipes/, which is the build context, so that renv.lock and the
 # scripts are inside it.
@@ -123,9 +120,6 @@ for target in $TARGETS; do
     --build-arg "PAPER_COMMIT=$PAPER_SHA"
     --rm=true
   )
-  if [[ -n "${GITHUB_PAT:-}" ]]; then
-    DOCKER_ARGS+=(--build-arg "GITHUB_PAT=${GITHUB_PAT}")
-  fi
 
   echo "building $image:$TAG_SHA (target $target, platform $DOCKER_PLATFORM)"
   docker build "${DOCKER_ARGS[@]}" .

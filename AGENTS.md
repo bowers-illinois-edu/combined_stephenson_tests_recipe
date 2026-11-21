@@ -18,7 +18,6 @@ DOCKER_PLATFORM=linux/amd64 KEEP_GUROBI=1 bash recipes/build_ubuntu.sh
 - `KEEP_GUROBI=0`: leave Gurobi out of the dev image (the cluster image never has it).
 - `PAPER_REPO`, `PAPER_REF`: where to copy `renv.lock` from (default `~/repos/combined_stephenson_tests` at `HEAD`).
 - `R_DEB_VERSION`: the CRAN Debian build of R (default `4.6.1-6.2404.0`); must match the lock's R version.
-- `GITHUB_PAT=...`: not needed; the lock's GitHub packages are public.
 
 Run an interactive shell in the container:
 ```bash
@@ -47,4 +46,4 @@ No formal test suite is included; use smoke checks:
 
 ## Security & Configuration Tips
 - Never commit secrets (e.g., `GITHUB_PAT`, license keys).
-- Treat `GITHUB_PAT` as sensitive even when passed as a Docker build arg.
+- Do not pass secrets as Docker build arguments.

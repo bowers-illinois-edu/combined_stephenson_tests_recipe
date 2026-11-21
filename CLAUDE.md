@@ -20,7 +20,6 @@ Environment variables for build:
 - `R_DEB_VERSION` - CRAN's Debian build of R (default `4.6.1-6.2404.0`); must match the lock's R version
 - `DOCKER_PLATFORM` - default `linux/amd64`
 - `KEEP_GUROBI=0` - leave Gurobi out of the dev image
-- `GITHUB_PAT` - not needed; the lock's GitHub packages are public
 
 Push to registry:
 ```bash

@@ -76,8 +76,6 @@ WORKDIR /opt/recipe
 COPY renv.lock renv.lock.SOURCE /opt/recipe/
 COPY scripts/renv_filter_lock.py scripts/check_image.R /opt/recipe/
 ENV RENV_PATHS_CACHE=/opt/renv/cache
-# Not needed for the lock as of 2026-10-12: its GitHub packages are public.
-ARG GITHUB_PAT
 # Empty when the Dockerfile is built without build_ubuntu.sh; the filter
 # then leaves the lock's repository on CRAN and every package compiles from
 # source, as every build did before 2026-10-17.
